@@ -3,7 +3,8 @@
 2. [Create IAM User](#schema2)
 3. [3. Configure the AWS CLI](#schema3)
 4. [Run your first AWS CLI command](#schema4)
-5. [exercise-1-creating-server](#schema5)
+5. [Exercise-1-creating-server](#schema5)
+6. [Exercise-2-endpoints](#schema6)
 
 
 <hr>
@@ -130,7 +131,7 @@ aws iam list-users --profile <profile-name>
 <hr>
 <a name='schema5'></a>
 
-## 5- exercise-1-creating-server
+## 5. Exercise-1-creating-server
 
 
 This is a simple node-express server.
@@ -159,3 +160,56 @@ The main code for this demo is located in the ./src/server.js file.
 
 - Test URL
 'http://localhost:8080/
+
+<hr>
+<a name='schema6'></a>
+
+# 6. Exercise-2-endpoints
+
+
+This is a simple tweeter like application server.
+
+- Getting Setup
+
+- Installing project dependencies
+
+This project uses NPM to manage software dependencies. NPM Relies on the package.json file located in the root of 
+this repository. After cloning, open your terminal and run:
+```bash
+npm install
+```
+>_tip_: **npm i** is shorthand for **npm install**
+
+- Running the Server Locally
+To run the server locally in developer mode, open terminal and run:
+
+`npm start` or `node server`
+
+- Important Files and Project Structure
+
+The source code for this demo resides in the ./src directory.
+
+- Test URL
+'http://localhost:8080/
+
+- Curl commands
+
+  - Get tweet by id
+  curl --location 'http://localhost:8080/tweets/1'
+
+  - Get list of tweets
+  curl --location 'http://localhost:8080/tweets'
+
+  - Get list of tweets filtered by author
+  curl --location 'http://localhost:8080/tweets?author=Michael'
+
+  - Create a new tweet
+  curl --location 'http://localhost:8080/tweets' \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "author": "Elisabeth",
+      "text": "This is the cutest puppy I have ever seen!",
+      "imgUrl": ""
+  }'
+
+
