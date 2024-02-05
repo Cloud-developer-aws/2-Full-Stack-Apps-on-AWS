@@ -1,7 +1,7 @@
 # 2-Full-Stack-Apps-on-AWS
 1. [AWS - Install and Configure CLI](#schema1)
 2. [Create IAM User](#schema2)
-3. [3. Configure the AWS CLI](#schema3)
+3. [Configure the AWS CLI](#schema3)
 4. [Run your first AWS CLI command](#schema4)
 5. [Exercise-1-creating-server](#schema5)
 6. [Exercise-2-endpoints](#schema6)
