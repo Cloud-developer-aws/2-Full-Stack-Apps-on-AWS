@@ -7,6 +7,7 @@
 6. [Exercise-2-endpoints](#schema6)
 7. [Exercise: Provisioning a Cloud Database](#schema7)
 8. [Exercise-3-rds](#schema8)
+9. [Exercise-4-s3](#schema9)
 
 
 <hr>
@@ -320,3 +321,81 @@ and create a tweet.
 - Check in database of the new tables.
 
 ![](./img/table.png)
+
+<hr>
+<a name='schema9'></a>
+
+
+## 9. Exercise-4-s3
+
+- Add file `imageRoutes.js`
+- Install `@aws-sdk/client-s3`
+```
+npm install @aws-sdk/client-s3
+```
+- Install `multer`
+```
+npm install multer
+
+```
+- Install `multer-s3` 
+```
+npm install multer-s3 
+```
+
+- This is a simple tweeter like application server.
+
+- Installing project dependencies
+
+This project uses NPM to manage software dependencies. NPM Relies on the package.json file located in the root of this repository. After cloning, open your terminal and run:
+```
+npm install
+```
+>_tip_: **npm i** is shorthand for **npm install**
+
+- Running the Server Locally
+To run the server locally in developer mode, open terminal and run:
+
+`npm start` or `node server`
+
+-  Important Files and Project Structure
+
+The source code for this demo resides in the ./src directory.
+
+* Test URL
+http://localhost:8080/
+
+- Curl commands
+
+  1. Get tweet by id
+  ```
+  curl --location 'http://localhost:8080/tweets/1'
+  ```
+
+  2. Get list of tweets
+  ```
+  curl --location 'http://localhost:8080/tweets'
+  ```
+
+  3. Get list of tweets filtered by author
+  ```
+  curl --location 'http://localhost:8080/tweets?author=Michael'
+  ```   
+
+    4. Create a new tweet
+  ```
+  curl --location 'http://localhost:8080/tweets' \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "author": "Elisabeth",
+      "text": "This is the cutest puppy I have ever seen!",
+      "imgUrl": ""
+  }'
+  ```
+
+    5. Uploading image
+  ```
+  curl --location 'http://localhost:8080/images' \
+  --form 'file=@"./puppy.jpeg"'                
+  {"url":"https://my-tweets-bucket-372538669722.s3.us-east-1.amazonaws.com/1684421206489_file_puppy.jpeg"}     
+  ```
