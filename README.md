@@ -5,6 +5,8 @@
 4. [Run your first AWS CLI command](#schema4)
 5. [Exercise-1-creating-server](#schema5)
 6. [Exercise-2-endpoints](#schema6)
+7. [Exercise: Provisioning a Cloud Database](#schema7)
+8. [Exercise-3-rds](#schema8)
 
 
 <hr>
@@ -213,3 +215,108 @@ The source code for this demo resides in the ./src directory.
   }'
 
 
+<hr>
+<a name='schema7'></a>
+
+
+## 7. Exercise: Provisioning a Cloud Database
+
+- Install dbeaver ubuntu
+
+```
+sudo add-apt-repository ppa:serge-rider/dbeaver-ce
+sudo apt-get update
+sudo apt-get install dbeaver-ce
+```
+- Create Security group 
+    - Add  Inbone rule
+- Create RDS
+    - Allow public access
+
+- Run dbeaver
+```
+dbeaver
+
+```
+
+<hr>
+<a name='schema8'></a>
+
+## 8. Exercise-3-rds
+
+
+- Install Prisma
+Prisma is a modern database ORM (Object-Relational Mapping) tool that allows you to work with relational databases 
+using a declarative data model and an intuitive programming interface.
+
+1. In the root directory of the project open a command line and enter the following command.
+```
+npm install prisma --save-dev
+npx prisma init --datasource-provider postgresql
+```
+This will create a new Prisma directory and configure Postgres as our database. Now, let's model our data and create 
+a database table for tweets.
+
+
+- Create the Data Model
+1. In the prisma directory you will find a file called `schema.prisma`. That is where we will define the structure of 
+our database table. We only have a single Tweet table but the configuration would not be much different for more 
+complex schemas.
+```
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tweet {
+  id String @id @default(cuid())
+  author String
+  text String
+  imgUrl String?
+}
+```
+
+2. In the same directory you can find another file called `seed.js`. This is a script used for filling our database 
+with data. In our case, we simply insert couple of tweets so that we have something to work it.
+
+3. `prismaClient.js` is just an util for instantiating a PrismaClient once and using it across the whole project 
+instead of doing it in each place.
+
+4. Prisma created also `.env` file where you can specify database url and credentials required to connect to the 
+database using the following format.
+
+5. Once you specify those details you should be able to run:
+
+```
+npx prisma generate 
+```
+to generate a prisma client
+
+```
+npx prisma migrate dev 
+```
+
+to execute migrations and seed script. This will create a Tweet table in the database and run our seed logic.
+
+```
+npx prisma db seed
+```
+to seed the database.
+
+- Connect Endpoints To Database
+
+1. The real magic happens in `tweetService.js` where we use prisma client to interact with our database. 
+Here, we have couple of functions to find a tweet by id, find all tweets, find all tweets for a single author 
+and create a tweet.
+2. Tweet service is further used in `tweetRoutes.js` to execute operations requested by the client.
+
+- Check in database of the new tables.
+
+![](./img/table.png)
