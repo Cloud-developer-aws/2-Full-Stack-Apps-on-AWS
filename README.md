@@ -10,6 +10,7 @@
 9. [Exercise-4-s3](#schema9)
 10. [Elastic Beanstalk](#schema10)
 11. [Exercise: Deploying our Service to Elastic Beanstalk](#schema11)
+12. [Monitoring your Applications](#schema12)
 
 
 <hr>
@@ -531,3 +532,51 @@ Y Luego
 eb deploy
 ```
 Para desplegar los cambios en AWS.
+
+
+
+<hr>
+<a name='schema12'></a>
+
+
+## 12. Monitoring your Applications
+
+- Activar en AWS Elastic Beanstalk en Configure updates, monitoring, and logging:
+  - Amazon X-Ray 
+  - Log streaming
+
+- Añadir varios console.log en los archivos `imageRoute.js` y en `tweetRoute.js`
+- Añadir en `server.js` estas dos líneas
+
+```python
+import AWSXRAY from 'aws-xray-sdk'
+app.use(AWSXRAY.express.openSegment('tweet-app'))
+```
+
+- Cambiar la const s3 en  `uploadImageToS3Middleware.js` por el siguiente código y añidir el import
+
+``` python
+import AWSXRAY from 'aws-xray-sdk'
+const s3 = AWSXRAY.captureAWSv3Client(new S3Client({
+  credentials: {
+    accessKeyId: process.env["AWS_ACCESS_KEY_ID"],
+    secretAccessKey: process.env["AWS_SECRET_ACCESS_KEY"],
+  },
+  region: process.env["AWS_REGION"]
+}));
+```
+- Añadir en `prismaClient.js` y cambiar el siguiente código
+
+```python
+import {capturePrisma } from '@cosva-lab/aws-xray-sdk-prisma'
+const client = capturePrisma(prisma, {namespace: 'remote'})
+
+export default client
+```
+
+- Instalar los paqutes 
+```
+npm install aws-xray-sdk
+npm install @cosva-lab/aws-xray-sdk-prisma
+
+```
