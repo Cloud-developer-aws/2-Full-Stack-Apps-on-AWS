@@ -8,6 +8,8 @@
 7. [Exercise: Provisioning a Cloud Database](#schema7)
 8. [Exercise-3-rds](#schema8)
 9. [Exercise-4-s3](#schema9)
+10. [Elastic Beanstalk](#schema10)
+11. [Exercise: Deploying our Service to Elastic Beanstalk](#schema11)
 
 
 <hr>
@@ -399,3 +401,133 @@ http://localhost:8080/
   --form 'file=@"./puppy.jpeg"'                
   {"url":"https://my-tweets-bucket-372538669722.s3.us-east-1.amazonaws.com/1684421206489_file_puppy.jpeg"}     
   ```
+
+<hr>
+<a name='schema10'></a>
+
+## 10. Elastic Beanstalk
+
+Elastic Beanstalk is a powerful Development Operations tool (DevOps) that allows you to easily deploy your code to AWS and create the required infrastructure with minimal effort.
+
+
+Amazon Elastic Beanstalk es un servicio de AWS que permite a los desarrolladores implementar y administrar fácilmente aplicaciones web y servicios en la nube. Proporciona una plataforma que simplifica la implementación, la escalabilidad y la administración de aplicaciones, permitiendo a los desarrolladores centrarse en escribir código sin preocuparse por la infraestructura subyacente.
+
+Aquí hay algunas características clave de Amazon Elastic Beanstalk:
+
+- Facilidad de uso: Elastic Beanstalk facilita la implementación y administración de aplicaciones al proporcionar una interfaz intuitiva de usuario y una serie de herramientas de línea de comandos y APIs que permiten la automatización de tareas comunes.
+
+- Escalabilidad automática: Elastic Beanstalk escala automáticamente los recursos de infraestructura subyacente en función de la carga de la aplicación. Esto significa que la aplicación puede manejar picos de tráfico sin intervención manual, lo que garantiza un rendimiento óptimo y una experiencia del usuario consistente.
+
+- Configuración flexible: Los desarrolladores pueden personalizar la configuración de la infraestructura subyacente, incluyendo el tipo de instancia, el tamaño de la instancia, el equilibrador de carga, las reglas de escalado y más, para adaptarse a las necesidades específicas de su aplicación.
+
+- Soporte para múltiples entornos de desarrollo: Elastic Beanstalk permite la creación de múltiples entornos de desarrollo, como entornos de desarrollo, pruebas y producción, lo que facilita la implementación y la gestión de diferentes versiones de la aplicación.
+
+- Integración con otros servicios de AWS: Elastic Beanstalk se integra con una variedad de servicios de AWS, como Amazon RDS para bases de datos, Amazon S3 para almacenamiento de archivos estáticos, Amazon CloudWatch para monitoreo y registros, entre otros, lo que proporciona una solución completa y escalable para la implementación de aplicaciones en la nube.
+
+
+
+You must install the EB CLI according to the instructions specific to your OS: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html
+
+
+
+**Para instalar Elastic Beanstalk Command Line Interface (EB CLI) en Ubuntu, puedes seguir estos pasos:**
+
+- Crear un nuevo entorno virtual:
+
+Utiliza la herramienta venv de Python para crear un nuevo entorno virtual en el directorio de tu proyecto:
+
+```
+python3 -m venv my_project_env
+```
+
+
+- Activar el entorno virtual:
+
+```
+source my_project_env/bin/activate
+```
+
+
+- Instalar EB CLI:
+
+Con el entorno virtual activado, instala EB CLI usando pip:
+
+```
+pip install awsebcli
+```
+
+- Verificar la instalación:
+
+Una vez instalado, verifica la instalación ejecutando:
+
+```
+eb --version
+
+```
+
+Esto debería mostrar la versión de EB CLI que has instalado en tu entorno virtual.
+
+
+<hr>
+<a name='schema11'></a>
+
+
+## 11. Exercise: Deploying our Service to Elastic Beanstalk
+
+
+- Inicializamos Elastic Beanstalk
+```
+eb init
+```
+
+- Elegimos nuestra región, en mi caso opción 1
+- Nombre de la aplicación
+- Usando Node, si.
+- Ultima versión
+- Después de todo esto se crea una directorio nuevo `.elasticbeanstalk` que contienes archivos de configuración `config.yml`.
+- En el archivo `schema.prisma` añadir
+```
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+```
+Quedando así:
+```
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+```
+
+- Ejecutamos para actualizar el cliente de Prisma
+```
+npx prisma generate
+``` 
+- Creamos nuestro Elastic Beanstalk environment:
+```
+eb create
+``` 
+Y ahora necesitamos expecificar varios parámetros:
+- Environment Name: le damos a enter para que sea el que nos dan por defecto
+- DNS CNAME prefix: Enter para añadir el valor por defecto
+- Select a load balancer type: Por defecto 2
+- Activar los Spot Fleet requests: No
+Y empieza la creazon del Elastic Beanstalk
+
+Una vez creado, ir AWS.
+![EB](./img/eb.png)
+Está en estado `severe` para ellos vamos a Configure updates, monitoring, and logging y en la parte que pone Configure updates, monitoring, and logging añadimos las mismas claves que usamos para configurarlos, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION y AWS_S3_BUCKET_NAME
+
+
+**OJO**
+
+Si se hace cualquier cambion en el código de primsa hay que ejecutar
+
+```
+npx prisma generate
+``` 
+Para actualizar el cliente de Prisma. 
+
+Y Luego
+```
+eb deploy
+```
+Para desplegar los cambios en AWS.
