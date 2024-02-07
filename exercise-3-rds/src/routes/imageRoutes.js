@@ -5,7 +5,8 @@ export const router = express.Router();
 
 router.post("/images/", uploadImage.single('file'), async (req, res) => {
 
-    if(req.file){
+    if (req.file) {
+        console.log('Image successfully uploaded to s3')
         res.status(201).json({url: req.file.location});
     } else {
         console.error('S3 upload failed', req)
