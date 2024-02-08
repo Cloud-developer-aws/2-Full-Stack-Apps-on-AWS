@@ -11,6 +11,10 @@
 10. [Elastic Beanstalk](#schema10)
 11. [Exercise: Deploying our Service to Elastic Beanstalk](#schema11)
 12. [Monitoring your Applications](#schema12)
+13. [Scalability](#schema13)
+14. [Introduction to Securing AWS Applications](#schema14)
+15. [Storing Passwords](#schema15)
+16. [User Authentication](#schema16)
 
 
 <hr>
@@ -580,3 +584,152 @@ npm install aws-xray-sdk
 npm install @cosva-lab/aws-xray-sdk-prisma
 
 ```
+
+
+<hr>
+<a name='schema13'></a>
+
+
+
+## 13. Scalability
+
+
+Scalability - is a property of a system which defines its capabilities to grow
+
+**Scaling Vertically (Up)**
+Making your instance more powerful by increasing its resources such as more RAM, better CPU, bigger hard-drive, faster GPU etc.
+
+
+**Scaling Horizontally (Out)**
+Adding more server instances and splitting the responsibility.
+
+
+**Scaling in Elastic Beanstalk**
+Go to Configuration, Instance traffic and scaling  and EDIT.
+
+
+<hr>
+<a name='schema14'></a>
+
+
+## 14. Introduction to Securing AWS Applications
+
+Security is a critical aspect of full-stack application development. Here are the key areas that need to be secured:
+
+**User Authentication:** This involves verifying the identity of users. Techniques such as password hashing, two-factor authentication, and session management are used to ensure that only authorized users can access the application.
+
+**Data Encryption:** Any sensitive data, such as user passwords, should be encrypted both in transit and at rest. This ensures that even if data is intercepted or accessed, it cannot be read without the correct decryption key.
+
+**API Security:** APIs are often used to transmit data between the server and client. They need to be secured to prevent unauthorized access. Techniques include using secure tokens, validating input data to protect against attacks like SQL injection, and rate limiting to prevent abuse.
+
+**Database Security:** Databases often store sensitive data. They should be secured to prevent unauthorized access and data leaks. This can involve encrypting data and using secure database configurations.
+
+No matter what kind of application you are creating, security is always desirable. You need to make sure that the data of your users is stored securely and access to it is only granted to authorized parties. We'll explore concepts related to application security such as:
+
+- Storing passwords
+- User authentication and authorization
+- How to implement authentication in Node.js
+- How to store secrets
+
+<hr>
+<a name='schema15'></a>
+
+## 15. Storing Passwords
+
+In order to secure passwords, we need to explore encryption, which is a method of converting data into a code to prevent unauthorized access.
+
+Encryption is particularly important when storing users' passwords. In an ideal secure system, passwords are not stored in plain text. If they were, anyone who gains access to the storage system could read and misuse them.
+
+Instead, passwords are encrypted using a one-way hash function. When a user creates an account or changes their password, the system uses the hash function to turn the password into a string of characters, known as a hash. This hash is then stored in the database.
+
+When the user logs in, the password they enter is hashed again, and this hash is compared with the stored hash. If they match, the password is correct. This way, even if someone gains access to the database, they can't reverse-engineer the passwords from the hashes.
+
+
+<hr>
+<a name='schema16'></a>
+
+## 16. User Authentication
+
+
+Almost every IT system requires user authentication and/or authorization. Those two terms are often used interchengably, although their meanings are different. So, let's try to clarify what they mean.
+
+Authentication is the process of verifying who the user is while authorization is the process of verifying what permissions the user holds.
+
+Comparing it to a real life example you can consider an airport where first you need to show your ID or Passport to identify yourself (authenticate) and then you need to provide a plane ticket to prove that you have right (you are authorized) to go on a specific flight.
+
+
+So how do we authenticate the users? Usually we ask users for their username and password, we compare those values with values stored (securely) in our database and if they match we give them access to our system.
+
+This is relatively straightforward but we need to bear in mind that users probably will make multiple requests to our system and they all need to be authenticated. Sending username and password with every request would not only be troublesome but also a security risk as it would increase the chance of someone stealing those credentials.
+
+There are two main ways to deal with this: cookie based and token based authentications.
+
+
+**Cookie based authentication**
+
+- User logs in
+- Server generates an access token and stores it in the database associated with that user
+- Server attaches access token to a response cookie to be returned to the client
+- This cookie will be attached by the browser to every request between the client and the server
+- On every consecutive request the server validates user's session based on the cookie
+
+Problems with cookie based authentication:
+
+- Cookies are sent authomatically by the browser, even for requests that do not require authentication
+- Cookies are bound to a single domain - so if your app makes requests to multiple services you might need to use for instance reverse proxy
+- Vulnerable to XSRF (Cross site request forgery) attacks
+
+
+
+**Token based authentication**
+
+- User logs in
+- Server generates an access token and signs it with a private key
+- Server returns signed token in a response body
+- The client stores the token and adds it to every consecutive request requirying authentication
+- Server validates user's session by validating the token with use of a public key
+
+Problems with token based authentication:
+
+- You have to store the token somewhere manually while cookies are stored out of the box - there are couple of options here such as: in-memory, localStorage, sessionStorage and cookies as token storage.
+- Slightly more prone to XSS (Cross Site Scripting) attack as it is easier to steal the token then a http-only cookie but malicious scripts can still make requests on your behalf containing the cookie
+
+
+Both those mechanisms can be implemented in a secure way. However, nowadays token based authentication is more popular because it tends to be easier to implement and gives you higher flexibility.
+
+
+**JWT**
+
+Neither token authentication nor cookie authentication mechanisms define the format of the user token. However, the most popular token structure currently used in IT systems is JWT - JSON Web Token. It is an open standard for transmitting information securely as JSON object.
+
+JWTs can be signed using a secret (with the HMAC algorithm) or a public/private key pair using RSA or ECDSA.
+
+The JWT contains a header, payload and a signature. You can put whatever information you need in the payload and be sure that noone can modify it without access to your private key/secret.
+
+JWTs can be additionaly encrypted if needed.
+
+Example JWT content:
+
+```
+// header
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+// payload
+{
+  "sub": "1234567890",
+  "userId": 123,
+  "name": "John Doe",
+  "admin": true
+}
+
+// signature
+HMACSHA256(
+  base64UrlEncode(header) + "." +
+  base64UrlEncode(payload),
+  secret)
+
+```
+
