@@ -15,6 +15,7 @@
 14. [Introduction to Securing AWS Applications](#schema14)
 15. [Storing Passwords](#schema15)
 16. [User Authentication](#schema16)
+17. [Exercise: Authentication](#schema17)
 
 
 <hr>
@@ -552,7 +553,7 @@ Para desplegar los cambios en AWS.
 - Añadir varios console.log en los archivos `imageRoute.js` y en `tweetRoute.js`
 - Añadir en `server.js` estas dos líneas
 
-```python
+```js
 import AWSXRAY from 'aws-xray-sdk'
 app.use(AWSXRAY.express.openSegment('tweet-app'))
 ```
@@ -710,7 +711,7 @@ JWTs can be additionaly encrypted if needed.
 
 Example JWT content:
 
-```
+```JSON
 // header
 {
   "alg": "HS256",
@@ -733,3 +734,148 @@ HMACSHA256(
 
 ```
 
+
+<hr>
+<a name='schema17'></a>
+
+## 17. Exercise: Authentication
+
+Let's implement token based authentication in our Node.js service.
+
+- `schema.prisma`
+  - add model User
+
+  ``` prisma
+    model User {
+  email               String @id @unique
+  hashedPassword      String
+  salt                String
+  firstName           String?
+  lastName            String?
+
+  createdAt DateTime  @default(now())
+  }
+  ```
+
+- `seed.js`
+Insert one user
+
+```js
+ const { hashedPassword, salt } = await passwordService.hashPassword("password")
+    await prisma.user.upsert({
+      where: { email: "test@email.com" },
+      update: {},
+      create: {
+        email: "test@email.com",
+        hashedPassword,
+        salt,
+        firstName: "Joe",
+        lastName: "Doe",
+      }
+    }) 
+```
+
+- Create `authRoutes.js` in `src/routes`
+- Create in `src/service`
+  - `passwordService.js`
+  - `tokenService.js`
+  - `userService.js`
+
+- Create `requiresAuthMiddleware` in `src/middleware`
+
+- Add in `server.js`
+```js
+import { router as authRoutes } from './routes/authRoutes.js';
+import { requiresAuth } from './middleware/requiresAuthMiddleware.js';
+import cors from 'cors'
+
+  app.use("/auth", authRoutes)
+  app.use("/tweets", requiresAuth(), tweetRoutes);
+  app.use("/images", requiresAuth(), imageRoutes);
+```
+
+- Create `keys.js`
+
+- Update Primsa Client
+```bash
+npx prisma generate
+```
+- Create table `User`
+```bash
+npx prisma migrate dev 
+```
+- Add seed
+```bash
+npx prisma db seed
+```
+
+- Running the Server Locally
+To run the server locally in developer mode, open terminal and run:
+
+`npm run start` or `node server`
+
+
+- Test URL
+http://localhost:8080/
+
+- Curl commands
+
+  - Authentication
+
+    - Get token
+      ``` bash
+      curl --location 'http://localhost:8080/auth/token' \
+      --header 'Content-Type: application/json' \
+      --data-raw '{
+          "email": "test@email.com",
+          "password": "password"
+      }'
+      ```
+    - Refresh token
+        ```bash
+        curl --location 'http://localhost:8080/auth/refresh' \
+        --header 'Content-Type: application/json' \
+        --data '{
+            "refreshToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZW1haWwuY29tIiwidG9rZW5UeXBlIjoiUkVGUkVTSF9UT0tFTiIsImlhdCI6MTcwNzQwMjM3NSwiZXhwIjoxNzA3NDAyOTc5fQ.FkajE0OxHgcJZLH4DDQmhUb-qeQDYAgzXD_Dan8hcOCqNtCzsk90WY4772clG6OEEYQDQNPJBjUkzv7LkvwrCpeKR-1RQdUc61_6K3lHEUWceusmEOHR90VVPrlKJfyJig9UpD51qgipmVuB2iUEhIKqCxNFq487_SI3wjTRHg5Tx3XHwzruIcOhvYRLjh7uRlSmWIjA-DZ0IU8pFY2Cm240vVnDVJ1k7qykuqGeOyxuMGMuXw7UkTn3BsklnLFPIAy1OEUyEmzQdPJkUeVZbd6KpZo9PRCzxa182zw2bsIgQi5NwgYPkeSqkDZJiAHrJGCsMmu1IAW54ljgh6u7xokqe8FNQghm7PyRjL3JcfI8qf791LgnpueCJyUWtGLrOcmEw3v-hWjUJbqUojQe4N5pCaBwDEVl8SMKnnCOj7xLbQSEZjFUZ5IsmLm8EGxPbMAl5WE6KdhLWN7z1O3RX5tjJ_wF0eEZ-yWB_8nuaG_zlwaK3x-sFhltpbroJXuSAnFGAjVIyanZP_eY9n7tFRXBaSLjDdhzL2pqzwXjxKkGruke2dclUgWvdK28HVtqYa6eObRsGwSoRf1FdZCgCB7cFUtFW6l142b0r-tfeKrGdQeUPRETjd3acW1u1FWq01iAg-j5Y3GlrFNK8QJnEeFzaX5eZzAv-qKOpUweKFk"
+        }'
+        ```
+
+      ``` bash
+      curl --location 'http://localhost:8080/tweets' --header 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZW1haWwuY29tIiwidG9rZW5UeXBlIjoiQUNDRVNTX1RPS0VOIiwiaWF0IjoxNzA3NDcxMzYwLCJleHAiOjE3MDc0Nzg1NjB9.FSu6mAOonmnyHdzWK9a4SMBAawdsv7F1KDAg20NreNFO72oIGoQ1tiQIVWyquYNqUV5q3-EaeEsc4332yC3NE4ZyOKL8WI-PeVVW3AwPSnQndthQbWHX1Yn1dackr8KAX8Zi3UOQdau6LTnZd8V81xWyIah39l5jAP77xc_lYLUuME_z5QVq7L19r9W04rjUXHWnKBmX2CsrYNGKQenUnkfkcilBEXGGXWxaqFOMetvrZlO6-zkxeO-4arJ_4G9RyjNG_xzzSpxgcFZAZylMVyuCP-hNKmXiMMN8LZcene4cYBkrEvB71kyDsL2DCJW0i5x1kwaxGck6EtNZ0RTp5wrA73GD50NqaaTlZQBJs1cB3ymiy5tpS-AxBO0x9ijp9i_3Ii2Av6j_Eb9KtUso2ZZqNnOC2JEzPkLEwsenoU5IcIdfVM4GhnFD6-yirvdvmbOOFHXnonVLYvdcXbAPXA-KDRhm6PV6eyIBnVnilh0eM7EVffTs-MnT6YK3Q0kGweU_q4IDmQPVMBSwNz-RGlv7vv9LSD4O6jUt0fCi-jdTgWDHU6SIBTJXJC34s_rw2HDYP3DYA2jS3cEPlT0yfizZ8rOnWvknbI8XRO1E4hfG7rDdUFBkiRLg50o1guJoRv3abF5ZHQbHJsu-681vi0NJvAPzp25wS612GOmLwmk'
+      ```
+
+  - Tweets
+    - Get tweet by id
+    ```bash
+    curl --location 'http://localhost:8080/tweets/1'
+    ```
+
+    - Get list of tweets
+    ```bash
+    curl --location 'http://localhost:8080/tweets'
+    ```
+
+    - Get list of tweets filtered by author
+    ```bash
+    curl --location 'http://localhost:8080/tweets?author=Michael'
+    ```
+
+    - Create a new tweet
+    ```bash
+    curl --location 'http://localhost:8080/tweets' \
+    --header 'Content-Type: application/json' \
+    --data '{
+        "author": "Elisabeth",
+        "text": "This is the cutest puppy I have ever seen!",
+        "imgUrl": ""
+    }'
+    ```
+
+  - Images
+
+    - Uploading image
+    ```bash
+    curl --location 'http://localhost:8080/images' \
+    --form 'file=@"./puppy.jpeg"'                
+    {"url":"https://udacity-tweets-bucket.s3.us-east-1.amazonaws.com/1684421206489_file_puppy.jpeg"}     
+    ```
